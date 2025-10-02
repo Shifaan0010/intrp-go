@@ -3,28 +3,25 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"monkey-interpreter/lexer"
-	"monkey-interpreter/token"
+	"monkey-interpreter/parser"
 )
 
 func main() {
 	l := lexer.New(*bufio.NewReader(os.Stdin))
 
-	for {
-		tok, err := l.NextToken()
-
-		if err != nil {
-			fmt.Println("err", err)
-			break
-		}
-
-		fmt.Printf("%v\n", tok)
-		// fmt.Println(l)
-
-		if tok.Type == token.EOF {
-			break
-		}
+	p, err := parser.New(l)
+	if err != nil {
+		slog.Error("failed to init parser", "err", err)
 	}
+
+	program, err := p.ParseProgram()
+	if err != nil {
+		slog.Error("failed to parse program", "err:", err)
+	}
+	
+	fmt.Printf("program: %#v", program)
 }

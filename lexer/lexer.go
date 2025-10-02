@@ -3,6 +3,7 @@ package lexer
 import (
 	"bufio"
 	"io"
+	"log/slog"
 
 	"monkey-interpreter/token"
 )
@@ -23,6 +24,14 @@ func New(input bufio.Reader) *Lexer {
 }
 
 func (l *Lexer) NextToken() (token.Token, error) {
+	tok, err := l.nextToken()
+
+	slog.Debug("read token", "tok", tok)
+
+	return tok, err
+}
+
+func (l *Lexer) nextToken() (token.Token, error) {
 	l.buf = l.buf[:0]
 	// fmt.Println(l.buf)
 
@@ -72,8 +81,8 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		return token.Token{Type: token.LT, Literal: string(l.buf)}, nil
 	case '>':
 		return token.Token{Type: token.GT, Literal: string(l.buf)}, nil
-	case ';':
-		return token.Token{Type: token.SEMICOLON, Literal: string(l.buf)}, nil
+	case '\n':
+		return token.Token{Type: token.NEWLINE, Literal: string(l.buf)}, nil
 	case '(':
 		return token.Token{Type: token.LPAREN, Literal: string(l.buf)}, nil
 	case ')':
@@ -181,7 +190,7 @@ func (l *Lexer) skipWhitespace() error {
 }
 
 func isWhitespace(b byte) bool {
-	return b == ' ' || b == '\n' || b == '\r' || b == '\t'
+	return b == ' ' || b == '\r' || b == '\t'
 }
 
 func isLetter(b byte) bool {

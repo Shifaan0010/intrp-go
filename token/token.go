@@ -57,12 +57,12 @@ const (
 	NOT_EQ // !=
 
 	// Delimiters
-	COMMA     // ,
-	SEMICOLON // ;
-	LPAREN    // (
-	RPAREN    // )
-	LBRACE    // {
-	RBRACE    // }
+	COMMA   // ,
+	NEWLINE // \n
+	LPAREN  // (
+	RPAREN  // )
+	LBRACE  // {
+	RBRACE  // }
 
 	// Keywords
 	FUNCTION // fn
@@ -114,8 +114,8 @@ func (t TokenType) String() string {
 	// Delimiters
 	case COMMA: // ,
 		return "COMMA"
-	case SEMICOLON: // ;
-		return "SEMICOLON"
+	case NEWLINE: // \n
+		return "NEWLINE"
 	case LPAREN: // (
 		return "LPAREN"
 	case RPAREN: // )
