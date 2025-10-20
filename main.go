@@ -10,7 +10,14 @@ import (
 	"monkey-interpreter/parser"
 )
 
-func main() {
+func main() {    
+	opts := &slog.HandlerOptions{
+        Level: slog.LevelDebug,
+    }
+    handler := slog.NewTextHandler(os.Stdout, opts)
+    logger := slog.New(handler)
+	slog.SetDefault(logger)
+
 	l := lexer.New(*bufio.NewReader(os.Stdin))
 
 	p, err := parser.New(l)
@@ -23,5 +30,6 @@ func main() {
 		slog.Error("failed to parse program", "err:", err)
 	}
 	
-	fmt.Printf("program: %#v", program)
+	fmt.Printf("program: %#v\n", program)
+	fmt.Println(program)
 }

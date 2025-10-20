@@ -8,7 +8,7 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("{%s %q}", t.Type, t.Literal)
+	return fmt.Sprintf("%q", t.Literal)
 }
 
 func KeywordType(s string) TokenType {

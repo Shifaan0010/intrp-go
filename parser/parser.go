@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"log/slog"
 	"monkey-interpreter/ast"
 	"monkey-interpreter/lexer"
@@ -32,14 +33,16 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	return p, err
 }
 
-func (p *Parser) ParseProgram() (ast.Program, error) {
-	program := ast.Program{
+func (p *Parser) ParseProgram() (*ast.Program, error) {
+	program := &ast.Program{
 		Statements: []ast.Statement{},
 	}
 
 	for p.curToken.Type != token.EOF {
 		stmt, err := p.parseStatement()
 		if err != nil {
+			slog.Debug("failed to parse statement", "stmt", stmt, "err", err)
+
 			return program, err
 		}
 
@@ -57,5 +60,17 @@ func (p *Parser) nextToken() error {
 	p.curToken = p.peekToken
 	p.peekToken, err = p.l.NextToken()
 
+	// fmt.Println("curToken:", p.curToken, "peekToken:", p.peekToken)
+
 	return err
+}
+
+func (p *Parser) nextExpect(t token.TokenType) error {
+	if p.peekToken.Type != t {
+		return fmt.Errorf("Expected next token to be, got %v", p.curToken)
+	}
+
+	p.nextToken()
+
+	return nil
 }
