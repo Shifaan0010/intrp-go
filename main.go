@@ -12,7 +12,7 @@ import (
 
 func main() {    
 	opts := &slog.HandlerOptions{
-        Level: slog.LevelDebug,
+        Level: slog.LevelError,
     }
     handler := slog.NewTextHandler(os.Stdout, opts)
     logger := slog.New(handler)

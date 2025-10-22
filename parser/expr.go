@@ -11,7 +11,7 @@ import (
 
 func (p *Parser) parseExpr(prec precedence.Precedence) (ast.Expression, error) {
 	// if !isPrefix(p.curToken) {
-	// 	
+	//
 	// }
 
 	leftExpr, err := p.parsePrefix(prec)
@@ -56,6 +56,9 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	case token.MINUS:
 		leftExpr, err = p.parsePrefixExpr(precedence.PREFIX)
 
+	case token.LPAREN:
+		leftExpr, err = p.parseParenthesis()
+
 	default:
 		return nil, fmt.Errorf("no prefix fn for token %s", p.curToken.Type)
 	}
@@ -65,6 +68,23 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	}
 
 	return leftExpr, nil
+}
+
+func (p *Parser) parseParenthesis() (ast.Expression, error) {
+	p.nextToken()
+
+	leftExpr, err := p.parseExpr(precedence.LOWEST)
+	if err != nil {
+		return leftExpr, err
+	}
+
+	if p.curToken.Type != token.RPAREN {
+		return leftExpr, fmt.Errorf("parseParenthesis: expected ')', got %s", p.curToken)
+	}
+
+	p.nextToken()
+
+	return leftExpr, err
 }
 
 func (p *Parser) parsePrefixExpr(prec precedence.Precedence) (ast.Expression, error) {
