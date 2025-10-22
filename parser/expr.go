@@ -51,6 +51,9 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	case token.INT:
 		leftExpr, err = p.parseInt()
 
+	case token.IDENT:
+		leftExpr, err = p.parseIdent()
+
 	case token.BANG:
 		fallthrough
 	case token.MINUS:
@@ -71,6 +74,10 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 }
 
 func (p *Parser) parseParenthesis() (ast.Expression, error) {
+	if p.curToken.Type != token.LPAREN {
+		panic(fmt.Sprintf("parseParenthesis called with invalid token %s", p.curToken))
+	}
+
 	p.nextToken()
 
 	leftExpr, err := p.parseExpr(precedence.LOWEST)
@@ -154,4 +161,20 @@ func (p *Parser) parseInt() (ast.Expression, error) {
 	p.nextToken()
 
 	return &node, err
+}
+
+func (p *Parser) parseIdent() (ast.Expression, error) {
+	// expect to only be called when curToken is ident
+	if p.curToken.Type != token.IDENT {
+		panic(fmt.Sprintf("parseIdent called with invalid token %v", p.curToken))
+	}
+
+	node := ast.Identifier{
+		Name: p.curToken.Literal,
+		Token: p.curToken,
+	}
+
+	p.nextToken()
+
+	return &node, nil
 }

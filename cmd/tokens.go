@@ -21,7 +21,7 @@ func main() {
 			break
 		}
 
-		fmt.Printf("%v\n", tok)
+		fmt.Printf("%v\n", tok.DbgString())
 		// fmt.Println(l)
 
 		if tok.Type == token.EOF {
