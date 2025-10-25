@@ -21,6 +21,21 @@ func (p *LetStatement) String() string {
 
 func (l *LetStatement) statementNode() {}
 
+type ReturnStatement struct {
+	Token token.Token
+	Expr  Expression
+}
+
+func (p *ReturnStatement) TokenLiteral() string {
+	return p.Token.Literal
+}
+
+func (p *ReturnStatement) String() string {
+	return fmt.Sprintf("return %s\n", p.Expr)
+}
+
+func (l *ReturnStatement) statementNode() {}
+
 type EmptyStatement struct {
 	Token token.Token
 }
@@ -45,7 +60,7 @@ func (p *ExprStatement) TokenLiteral() string {
 }
 
 func (p *ExprStatement) String() string {
-	return p.Expr.String()
+	return p.Expr.String() + "\n"
 }
 
 func (l *ExprStatement) statementNode() {}

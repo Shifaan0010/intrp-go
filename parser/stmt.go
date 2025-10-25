@@ -13,6 +13,9 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	case token.LET:
 		return p.parseLet()
 
+	case token.RETURN:
+		return p.parseReturn()
+
 	case token.NEWLINE:
 		return p.parseEmpty()
 
@@ -45,14 +48,44 @@ func (p *Parser) parseExprStmt() (ast.Statement, error) {
 		return nil, errors.Join(fmt.Errorf("error while parsing expr"), err)
 	}
 
-	if isEndOfStmt(p.curToken.Type) {
+	if !isEndOfStmt(p.curToken.Type) {
 		return nil, fmt.Errorf("Expected newline, got %v, %v", p.curToken, expr)
 	}
+
+	p.nextToken()
 
 	return &ast.ExprStatement{
 		Token: token.Token{},
 		Expr:  expr,
 	}, err
+}
+
+func (p *Parser) parseReturn() (ast.Statement, error) {
+	// expect to only be called when curToken is return
+	if p.curToken.Type != token.RETURN {
+		panic(fmt.Sprintf("parseReturn called with invalid token %v", p.curToken))
+	}
+
+	stmt := &ast.ReturnStatement{
+		Token: p.curToken,
+	}
+
+	p.nextToken()
+
+	expr, err := p.parseExpr(precedence.LOWEST)
+	if err != nil {
+		return stmt, err
+	}
+
+	stmt.Expr = expr
+
+	if !isEndOfStmt(p.curToken.Type) {
+		return nil, fmt.Errorf("Expected newline, got %v", p.curToken)
+	}
+
+	p.nextToken()
+
+	return stmt, nil
 }
 
 func (p *Parser) parseLet() (ast.Statement, error) {
@@ -95,7 +128,7 @@ func (p *Parser) parseLet() (ast.Statement, error) {
 	letStmt.Expr = expr
 
 	// newline
-	if isEndOfStmt(p.curToken.Type) {
+	if !isEndOfStmt(p.curToken.Type) {
 		return &letStmt, fmt.Errorf("Expected newline (\\n), got %v", p.curToken)
 	}
 
@@ -105,5 +138,5 @@ func (p *Parser) parseLet() (ast.Statement, error) {
 }
 
 func isEndOfStmt(tok token.TokenType) bool {
-	return tok != token.NEWLINE && tok != token.EOF
+	return tok == token.NEWLINE || tok == token.EOF
 }

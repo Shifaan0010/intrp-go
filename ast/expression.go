@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"monkey-interpreter/token"
+	"strings"
 )
 
 // type Operator int
@@ -71,18 +72,64 @@ func (e *InfixExpr) String() string {
 
 func (e *InfixExpr) expressionNode() {}
 
-// type AddExpr struct {
-// 	Token token.Token
-// 	left  Expression
-// 	right Expression
-// }
-//
-// func (i *AddExpr) TokenLiteral() string {
-// 	return i.Token.Literal
-// }
-//
-// func (i *AddExpr) String() string {
-// 	return fmt.Sprintf("%s + %s", i.left, i.right)
-// }
-//
-// func (i *AddExpr) expressionNode() {}
+type IfExpr struct {
+	Cond Expression
+	If   Expression
+	Else *Expression
+	Tok  token.Token
+}
+
+func (e *IfExpr) TokenLiteral() string {
+	return e.Tok.Literal
+}
+
+func (e *IfExpr) String() string {
+	if e.Else == nil {
+		return fmt.Sprintf("if %s %s", e.Cond, e.If)
+	} else {
+		return fmt.Sprintf("if %s %s else %s", e.Cond, e.If, *e.Else)
+	}
+}
+
+func (e *IfExpr) expressionNode() {}
+
+type FnExpr struct {
+	Params []Identifier
+	Block  BlockExpr
+	Tok    token.Token
+}
+
+func (e *FnExpr) TokenLiteral() string {
+	return e.Tok.Literal
+}
+
+func (e *FnExpr) String() string {
+	return fmt.Sprintf("fn (%s) %s", &e.Params, e.Block)
+}
+
+func (e *FnExpr) expressionNode() {}
+
+type BlockExpr struct {
+	Stmts []Statement
+	Tok   token.Token
+}
+
+func (e *BlockExpr) TokenLiteral() string {
+	return e.Tok.Literal
+}
+
+func (e *BlockExpr) String() string {
+	sb := strings.Builder{}
+
+	sb.WriteString("{")
+
+	for _, stmt := range e.Stmts {
+		sb.WriteString(stmt.String())
+	}
+
+	sb.WriteString("}")
+
+	return sb.String()
+}
+
+func (e *BlockExpr) expressionNode() {}

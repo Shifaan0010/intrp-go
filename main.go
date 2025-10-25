@@ -30,6 +30,8 @@ func main() {
 		slog.Error("failed to parse program", "err:", err)
 	}
 	
-	fmt.Printf("program: %#v\n", program)
-	fmt.Println(program)
+	for _, stmt := range program.Statements {
+		fmt.Printf("%#v\n", stmt)
+		fmt.Printf("%s\n", stmt)
+	}
 }

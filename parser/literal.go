@@ -45,7 +45,7 @@ func (p *Parser) parseBool() (ast.Expression, error) {
 
 	return &node, nil
 }
-func (p *Parser) parseIdent() (ast.Expression, error) {
+func (p *Parser) parseIdent() (*ast.Identifier, error) {
 	// expect to only be called when curToken is ident
 	if p.curToken.Type != token.IDENT {
 		panic(fmt.Sprintf("parseIdent called with invalid token %v", p.curToken))

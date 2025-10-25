@@ -13,7 +13,7 @@ func (p *Parser) parseExpr(prec precedence.Precedence) (ast.Expression, error) {
 	//
 	// }
 
-	leftExpr, err := p.parsePrefix(prec)
+	leftExpr, err := p.parsePrefix()
 	if err != nil {
 		return nil, errors.Join(errors.New("parseExpr: failed to parse prefix"), err)
 	}
@@ -42,7 +42,7 @@ func isPrefix(tok token.TokenType) bool {
 		tok == token.MINUS
 }
 
-func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error) {
+func (p *Parser) parsePrefix() (ast.Expression, error) {
 	var leftExpr ast.Expression
 	var err error
 
@@ -50,8 +50,10 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	case token.INT:
 		leftExpr, err = p.parseInt()
 
-	// case token.IF:
-	// 	leftExpr, err := p.parseIf()
+	case token.TRUE:
+		fallthrough
+	case token.FALSE:
+		leftExpr, err = p.parseBool()
 
 	case token.IDENT:
 		leftExpr, err = p.parseIdent()
@@ -59,10 +61,19 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	case token.BANG:
 		fallthrough
 	case token.MINUS:
-		leftExpr, err = p.parsePrefixExpr(precedence.PREFIX)
+		leftExpr, err = p.parsePrefixExpr()
 
 	case token.LPAREN:
 		leftExpr, err = p.parseParenthesis()
+
+	case token.LBRACE:
+		leftExpr, err = p.parseBlock()
+
+	case token.IF:
+		leftExpr, err = p.parseIf()
+
+	case token.FUNCTION:
+		leftExpr, err = p.parseFn()
 
 	default:
 		return nil, fmt.Errorf("no prefix fn for token %s", p.curToken.Type)
@@ -75,52 +86,32 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	return leftExpr, nil
 }
 
-func (p *Parser) parseParenthesis() (ast.Expression, error) {
-	if p.curToken.Type != token.LPAREN {
-		panic(fmt.Sprintf("parseParenthesis called with invalid token %s", p.curToken))
-	}
-
-	p.nextToken()
-
-	leftExpr, err := p.parseExpr(precedence.LOWEST)
-	if err != nil {
-		return leftExpr, err
-	}
-
-	if p.curToken.Type != token.RPAREN {
-		return leftExpr, fmt.Errorf("parseParenthesis: expected ')', got %s", p.curToken)
-	}
-
-	p.nextToken()
-
-	return leftExpr, err
-}
-
-func (p *Parser) parsePrefixExpr(prec precedence.Precedence) (ast.Expression, error) {
+func (p *Parser) parsePrefixExpr() (ast.Expression, error) {
 	var err error = nil
 
 	expr := &ast.PrefixExpr{
 		Op: p.curToken,
 	}
 
-	switch p.peekToken.Type {
-	case token.INT:
-		p.nextToken()
+	p.nextToken()
 
+	switch p.curToken.Type {
+	case token.INT:
 		expr.Expr, err = p.parseInt()
 
 	case token.TRUE:
 		fallthrough
 	case token.FALSE:
-		p.nextToken()
-
 		expr.Expr, err = p.parseBool()
 
-	// case token.IDENT:
-	// 	expr.Expr, err = p.parseIdentifier()
+	case token.IDENT:
+		expr.Expr, err = p.parseIdent()
+
+	case token.LPAREN:
+		expr.Expr, err = p.parsePrefix()
 
 	default:
-		err = fmt.Errorf("unexpected token %v for parsePrefix", p.peekToken)
+		err = fmt.Errorf("unexpected token %v for parsePrefixExpr", p.curToken)
 	}
 
 	return expr, err
@@ -154,3 +145,135 @@ func (p *Parser) parseInfix(left ast.Expression, prec precedence.Precedence) (as
 	return expr, err
 }
 
+func (p *Parser) parseParenthesis() (ast.Expression, error) {
+	if p.curToken.Type != token.LPAREN {
+		panic(fmt.Sprintf("parseParenthesis called with invalid token %s", p.curToken))
+	}
+
+	p.nextToken()
+
+	leftExpr, err := p.parseExpr(precedence.LOWEST)
+	if err != nil {
+		return leftExpr, err
+	}
+
+	if p.curToken.Type != token.RPAREN {
+		return leftExpr, fmt.Errorf("parseParenthesis: expected ')', got %s", p.curToken)
+	}
+
+	p.nextToken()
+
+	return leftExpr, err
+}
+
+func (p *Parser) parseIf() (ast.Expression, error) {
+	if p.curToken.Type != token.IF {
+		panic(fmt.Sprintf("parseIf called with invalid token %s", p.curToken))
+	}
+
+	expr := &ast.IfExpr{
+		Tok: p.curToken,
+	}
+
+	p.nextToken()
+
+	var err error
+
+	expr.Cond, err = p.parseExpr(precedence.LOWEST)
+	if err != nil {
+		return expr, err
+	}
+
+	expr.If, err = p.parseExpr(precedence.LOWEST)
+	if err != nil {
+		return expr, err
+	}
+
+	if p.curToken.Type == token.ELSE {
+		p.nextToken()
+
+		elseExpr, err := p.parseExpr(precedence.LOWEST)
+		if err != nil {
+			return expr, err
+		}
+
+		expr.Else = &elseExpr
+	}
+
+	return expr, nil
+}
+
+func (p *Parser) parseFn() (ast.Expression, error) {
+	if p.curToken.Type != token.FUNCTION {
+		panic(fmt.Sprintf("parseFn called with invalid token %s", p.curToken))
+	}
+
+	expr := &ast.FnExpr{
+		Tok: p.curToken,
+	}
+
+	p.nextToken()
+	if p.curToken.Type != token.LPAREN {
+		return nil, fmt.Errorf("parseFn: expected (, got %s", p.curToken)
+	}
+		
+	p.nextToken()
+
+	expr.Params = []ast.Identifier{}
+	for p.curToken.Type == token.IDENT {
+		ident, _ := p.parseIdent()
+
+		expr.Params = append(expr.Params, *ident)
+
+		fmt.Println("parsed", *ident)
+
+		if p.curToken.Type == token.COMMA {
+			p.nextToken()
+			if p.curToken.Type != token.IDENT {
+				return nil, fmt.Errorf("parseFn: expected Identifier after comma, got %s", p.curToken)
+			}
+		}
+	}
+
+	if p.curToken.Type != token.RPAREN {
+		return nil, fmt.Errorf("parseFn: expected ), got %s", p.curToken)
+	}
+
+	p.nextToken()
+
+	fmt.Println(expr)
+
+	block, err := p.parseBlock()
+	if err != nil {
+		return expr, err
+	}
+
+	expr.Block = *block
+
+	return expr, nil
+}
+
+func (p *Parser) parseBlock() (*ast.BlockExpr, error) {
+	if p.curToken.Type != token.LBRACE {
+		panic(fmt.Sprintf("parseBlock called with invalid token %s", p.curToken))
+	}
+
+	block := &ast.BlockExpr{
+		Stmts: []ast.Statement{},
+	}
+
+	p.nextToken()
+
+	for p.curToken.Type != token.RBRACE {
+		stmt, err := p.parseStatement()
+		if err != nil {
+			return block, err
+		}
+
+		block.Stmts = append(block.Stmts, stmt)
+	}
+
+	p.nextToken()
+
+	return block, nil
+}
