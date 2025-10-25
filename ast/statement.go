@@ -6,9 +6,8 @@ import (
 )
 
 type LetStatement struct {
-	Token token.Token
-	Ident Identifier
-	Expr  Expression
+	Token  token.Token
+	Assign AssignStatement
 }
 
 func (p *LetStatement) TokenLiteral() string {
@@ -16,7 +15,7 @@ func (p *LetStatement) TokenLiteral() string {
 }
 
 func (p *LetStatement) String() string {
-	return fmt.Sprintf("let %s = %s\n", &p.Ident, p.Expr)
+	return fmt.Sprintf("let %s = %s\n", &p.Assign.Ident, p.Assign.Expr)
 }
 
 func (l *LetStatement) statementNode() {}
@@ -35,6 +34,22 @@ func (p *ReturnStatement) String() string {
 }
 
 func (l *ReturnStatement) statementNode() {}
+
+type AssignStatement struct {
+	Token token.Token
+	Ident Identifier
+	Expr  Expression
+}
+
+func (p *AssignStatement) TokenLiteral() string {
+	return p.Token.Literal
+}
+
+func (p *AssignStatement) String() string {
+	return fmt.Sprintf("%s = %s\n", &p.Ident, p.Expr)
+}
+
+func (l *AssignStatement) statementNode() {}
 
 type EmptyStatement struct {
 	Token token.Token

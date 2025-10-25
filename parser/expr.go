@@ -225,8 +225,6 @@ func (p *Parser) parseFn() (ast.Expression, error) {
 
 		expr.Params = append(expr.Params, *ident)
 
-		fmt.Println("parsed", *ident)
-
 		if p.curToken.Type == token.COMMA {
 			p.nextToken()
 			if p.curToken.Type != token.IDENT {
@@ -240,8 +238,6 @@ func (p *Parser) parseFn() (ast.Expression, error) {
 	}
 
 	p.nextToken()
-
-	fmt.Println(expr)
 
 	block, err := p.parseBlock()
 	if err != nil {

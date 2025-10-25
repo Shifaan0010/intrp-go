@@ -20,6 +20,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseEmpty()
 
 	default:
+		if p.curToken.Type == token.IDENT && p.peekToken.Type == token.ASSIGN {
+			return p.parseAssign()
+		}
+
 		return p.parseExprStmt()
 		// return nil, fmt.Errorf("Invalid token for statement: %v", p.curToken)
 	}
@@ -100,12 +104,21 @@ func (p *Parser) parseLet() (ast.Statement, error) {
 
 	p.nextToken()
 
+	assignStmt, err := p.parseAssign()
+	letStmt.Assign = *assignStmt
+
+	return &letStmt, err
+}
+
+func (p *Parser) parseAssign() (*ast.AssignStatement, error) {
+	stmt := &ast.AssignStatement{}
+
 	// identifier
 	if p.curToken.Type != token.IDENT {
-		return &letStmt, fmt.Errorf("Expected identifier after let, got %v", p.curToken)
+		return stmt, fmt.Errorf("Expected identifier after let, got %v", p.curToken)
 	}
 
-	letStmt.Ident = ast.Identifier{
+	stmt.Ident = ast.Identifier{
 		Token: p.curToken,
 		Name:  p.curToken.Literal,
 	}
@@ -114,7 +127,7 @@ func (p *Parser) parseLet() (ast.Statement, error) {
 
 	// assign (=)
 	if p.curToken.Type != token.ASSIGN {
-		return &letStmt, fmt.Errorf("Expected assignment (=), got %v", p.curToken)
+		return stmt, fmt.Errorf("Expected assignment (=), got %v", p.curToken)
 	}
 
 	p.nextToken()
@@ -122,19 +135,19 @@ func (p *Parser) parseLet() (ast.Statement, error) {
 	// expression
 	expr, err := p.parseExpr(precedence.LOWEST)
 	if err != nil {
-		return &letStmt, err
+		return stmt, err
 	}
 
-	letStmt.Expr = expr
+	stmt.Expr = expr
 
 	// newline
 	if !isEndOfStmt(p.curToken.Type) {
-		return &letStmt, fmt.Errorf("Expected newline (\\n), got %v", p.curToken)
+		return stmt, fmt.Errorf("Expected newline (\\n), got %v", p.curToken)
 	}
 
 	p.nextToken()
 
-	return &letStmt, nil
+	return stmt, nil
 }
 
 func isEndOfStmt(tok token.TokenType) bool {
