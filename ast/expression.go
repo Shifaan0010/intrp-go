@@ -3,23 +3,7 @@ package ast
 import (
 	"fmt"
 	"monkey-interpreter/token"
-	"strconv"
 )
-
-type IntLiteral struct {
-	Token token.Token
-	Val   int64
-}
-
-func (e *IntLiteral) TokenLiteral() string {
-	return e.Token.Literal
-}
-
-func (e *IntLiteral) String() string {
-	return strconv.FormatInt(e.Val, 10)
-}
-
-func (e *IntLiteral) expressionNode() {}
 
 // type Operator int
 //

@@ -6,7 +6,6 @@ import (
 	"monkey-interpreter/ast"
 	"monkey-interpreter/parser/precedence"
 	"monkey-interpreter/token"
-	"strconv"
 )
 
 func (p *Parser) parseExpr(prec precedence.Precedence) (ast.Expression, error) {
@@ -50,6 +49,9 @@ func (p *Parser) parsePrefix(prec precedence.Precedence) (ast.Expression, error)
 	switch p.curToken.Type {
 	case token.INT:
 		leftExpr, err = p.parseInt()
+
+	// case token.IF:
+	// 	leftExpr, err := p.parseIf()
 
 	case token.IDENT:
 		leftExpr, err = p.parseIdent()
@@ -107,6 +109,13 @@ func (p *Parser) parsePrefixExpr(prec precedence.Precedence) (ast.Expression, er
 
 		expr.Expr, err = p.parseInt()
 
+	case token.TRUE:
+		fallthrough
+	case token.FALSE:
+		p.nextToken()
+
+		expr.Expr, err = p.parseBool()
+
 	// case token.IDENT:
 	// 	expr.Expr, err = p.parseIdentifier()
 
@@ -145,36 +154,3 @@ func (p *Parser) parseInfix(left ast.Expression, prec precedence.Precedence) (as
 	return expr, err
 }
 
-func (p *Parser) parseInt() (ast.Expression, error) {
-	// expect to only be called when curToken is int
-	if p.curToken.Type != token.INT {
-		panic(fmt.Sprintf("parseInt called with invalid token %v", p.curToken))
-	}
-
-	val, err := strconv.ParseInt(p.curToken.Literal, 10, 64)
-
-	node := ast.IntLiteral{
-		Val:   val,
-		Token: p.curToken,
-	}
-
-	p.nextToken()
-
-	return &node, err
-}
-
-func (p *Parser) parseIdent() (ast.Expression, error) {
-	// expect to only be called when curToken is ident
-	if p.curToken.Type != token.IDENT {
-		panic(fmt.Sprintf("parseIdent called with invalid token %v", p.curToken))
-	}
-
-	node := ast.Identifier{
-		Name: p.curToken.Literal,
-		Token: p.curToken,
-	}
-
-	p.nextToken()
-
-	return &node, nil
-}

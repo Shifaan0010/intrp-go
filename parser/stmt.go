@@ -45,7 +45,7 @@ func (p *Parser) parseExprStmt() (ast.Statement, error) {
 		return nil, errors.Join(fmt.Errorf("error while parsing expr"), err)
 	}
 
-	if p.curToken.Type != token.NEWLINE {
+	if isEndOfStmt(p.curToken.Type) {
 		return nil, fmt.Errorf("Expected newline, got %v, %v", p.curToken, expr)
 	}
 
@@ -95,11 +95,15 @@ func (p *Parser) parseLet() (ast.Statement, error) {
 	letStmt.Expr = expr
 
 	// newline
-	if p.curToken.Type != token.NEWLINE {
+	if isEndOfStmt(p.curToken.Type) {
 		return &letStmt, fmt.Errorf("Expected newline (\\n), got %v", p.curToken)
 	}
 
 	p.nextToken()
 
 	return &letStmt, nil
+}
+
+func isEndOfStmt(tok token.TokenType) bool {
+	return tok != token.NEWLINE && tok != token.EOF
 }
