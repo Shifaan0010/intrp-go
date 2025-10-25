@@ -125,7 +125,9 @@ func isInfix(tok token.TokenType) bool {
 		tok == token.ASTERISK ||
 		tok == token.SLASH ||
 		tok == token.LT ||
-		tok == token.GT
+		tok == token.GT ||
+		tok == token.LPAREN ||
+		tok == token.COMMA
 }
 
 func (p *Parser) parseInfix(left ast.Expression, prec precedence.Precedence) (ast.Expression, error) {
@@ -134,15 +136,29 @@ func (p *Parser) parseInfix(left ast.Expression, prec precedence.Precedence) (as
 		Left: left,
 	}
 
-	p.nextToken()
+	switch expr.Op.Type {
+	case token.LPAREN:
+		argsExpr, err := p.parseParenthesis()
+		if err != nil {
+			return expr, err
+		}
+		
+		expr.Right = argsExpr
 
-	// prec := precedence.TokenPrecedence(p.curToken())
+		return expr, nil
 
-	var err error
+	default:
+		p.nextToken()
 
-	expr.Right, err = p.parseExpr(prec)
+		rightExpr, err := p.parseExpr(prec)
+		if err != nil {
+			return expr, err
+		}
 
-	return expr, err
+		expr.Right = rightExpr
+
+		return expr, nil
+	}
 }
 
 func (p *Parser) parseParenthesis() (ast.Expression, error) {
@@ -216,7 +232,7 @@ func (p *Parser) parseFn() (ast.Expression, error) {
 	if p.curToken.Type != token.LPAREN {
 		return nil, fmt.Errorf("parseFn: expected (, got %s", p.curToken)
 	}
-		
+
 	p.nextToken()
 
 	expr.Params = []ast.Identifier{}

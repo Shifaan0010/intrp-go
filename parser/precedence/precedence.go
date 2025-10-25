@@ -11,6 +11,7 @@ const (
 	LOWEST
 	EQUALS      // ==
 	LESSGREATER // < or >
+	COMMA
 	SUM         // +
 	PRODUCT     // *
 	PREFIX      // +x or !x
@@ -19,6 +20,9 @@ const (
 
 func TokenPrecedence(tok token.TokenType) Precedence {
 	switch tok {
+
+	case token.COMMA:
+		return COMMA
 
 	case token.EQ:
 		fallthrough
@@ -39,6 +43,9 @@ func TokenPrecedence(tok token.TokenType) Precedence {
 		fallthrough
 	case token.SLASH:
 		return PRODUCT
+
+	case token.LPAREN:
+		return CALL
 	}
 
 	return LOWEST

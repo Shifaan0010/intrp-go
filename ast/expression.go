@@ -109,6 +109,22 @@ func (e *FnExpr) String() string {
 
 func (e *FnExpr) expressionNode() {}
 
+type CallExpr struct {
+	Ident  Identifier
+	Params []Expression
+	Tok    token.Token
+}
+
+func (e *CallExpr) TokenLiteral() string {
+	return e.Tok.Literal
+}
+
+func (e *CallExpr) String() string {
+	return fmt.Sprintf("%s(%s)", e.Ident, &e.Params)
+}
+
+func (e *CallExpr) expressionNode() {}
+
 type BlockExpr struct {
 	Stmts []Statement
 	Tok   token.Token
