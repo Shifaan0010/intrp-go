@@ -54,6 +54,14 @@ func (p *Parser) ParseProgram() (*ast.Program, error) {
 	return program, nil
 }
 
+func (p *Parser) ParseStatement() (ast.Statement, error) {
+	return p.parseStatement()
+}
+
+func (p *Parser) IsAtEof() bool {
+	return p.curToken.Type == token.EOF
+}
+
 func (p *Parser) nextToken() error {
 	var err error = nil
 
