@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"monkey-interpreter/token"
+	"intrp-go/token"
 )
 
 type LetStatement struct {

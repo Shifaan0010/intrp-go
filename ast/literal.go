@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"monkey-interpreter/token"
+	"intrp-go/token"
 	"strconv"
 )
 

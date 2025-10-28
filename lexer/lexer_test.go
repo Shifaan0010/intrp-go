@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"monkey-interpreter/lexer"
-	"monkey-interpreter/token"
+	"intrp-go/lexer"
+	"intrp-go/token"
 )
 
 func TestNextToken(t *testing.T) {

@@ -1,3 +1,3 @@
-module monkey-interpreter
+module intrp-go
 
 go 1.24.5

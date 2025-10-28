@@ -5,7 +5,7 @@ import (
 	"io"
 	"log/slog"
 
-	"monkey-interpreter/token"
+	"intrp-go/token"
 )
 
 type Lexer struct {

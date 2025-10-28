@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"monkey-interpreter/ast"
-	"monkey-interpreter/token"
+	"intrp-go/ast"
+	"intrp-go/token"
 	"strconv"
 )
 

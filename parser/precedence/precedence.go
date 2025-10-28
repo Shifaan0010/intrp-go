@@ -1,7 +1,7 @@
 package precedence
 
 import (
-	"monkey-interpreter/token"
+	"intrp-go/token"
 )
 
 type Precedence int

@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"os"
 
-	"monkey-interpreter/lexer"
-	"monkey-interpreter/parser"
+	"intrp-go/lexer"
+	"intrp-go/parser"
 )
 
 func main() {    

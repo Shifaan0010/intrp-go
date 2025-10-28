@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"os"
 
-	"monkey-interpreter/ast"
-	"monkey-interpreter/lexer"
-	"monkey-interpreter/parser"
+	"intrp-go/ast"
+	"intrp-go/lexer"
+	"intrp-go/parser"
 )
 
 func main() {

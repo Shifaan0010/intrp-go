@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"monkey-interpreter/lexer"
-	"monkey-interpreter/token"
+	"intrp-go/lexer"
+	"intrp-go/token"
 )
 
 func main() {

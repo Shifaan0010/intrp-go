@@ -3,9 +3,9 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"monkey-interpreter/ast"
-	"monkey-interpreter/parser/precedence"
-	"monkey-interpreter/token"
+	"intrp-go/ast"
+	"intrp-go/parser/precedence"
+	"intrp-go/token"
 )
 
 func (p *Parser) parseExpr(prec precedence.Precedence) (ast.Expression, error) {
