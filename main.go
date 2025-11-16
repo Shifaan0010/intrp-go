@@ -6,16 +6,18 @@ import (
 	"log/slog"
 	"os"
 
+	"intrp-go/eval"
 	"intrp-go/lexer"
 	"intrp-go/parser"
 )
 
-func main() {    
+func main() {
 	opts := &slog.HandlerOptions{
-        Level: slog.LevelError,
-    }
-    handler := slog.NewTextHandler(os.Stdout, opts)
-    logger := slog.New(handler)
+		Level: slog.LevelError,
+	}
+
+	handler := slog.NewTextHandler(os.Stdout, opts)
+	logger := slog.New(handler)
 	slog.SetDefault(logger)
 
 	l := lexer.New(*bufio.NewReader(os.Stdin))
@@ -29,9 +31,22 @@ func main() {
 	if err != nil {
 		slog.Error("failed to parse program", "err:", err)
 	}
-	
+
 	for _, stmt := range program.Statements {
-		fmt.Printf("%#v\n", stmt)
-		fmt.Printf("%s\n", stmt)
+		// j, _ := json.Marshal(stmt)
+		// fmt.Printf("%s\n", string(j))
+
+		// fmt.Printf("stmt: %#v", stmt)
+
+		fmt.Printf("stmt: %s", stmt)
+
+		evald, err := eval.Eval(stmt)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+
+		fmt.Println("evaled val:", evald)
+
+		fmt.Println()
 	}
 }
