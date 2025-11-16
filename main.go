@@ -40,7 +40,7 @@ func main() {
 
 		fmt.Printf("stmt: %s", stmt)
 
-		evald, err := eval.Eval(stmt)
+		evald, err := eval.EvalNode(stmt)
 		if err != nil {
 			fmt.Println("error:", err)
 		}

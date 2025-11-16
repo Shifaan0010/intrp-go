@@ -3,18 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
-	"log/slog"
 	"os"
 	"strings"
 
-	"intrp-go/ast"
 	"intrp-go/eval"
-	"intrp-go/lexer"
-	"intrp-go/parser"
 )
 
-func readStmt(bufRead bufio.Reader) io.Reader {
+func readStmt(bufRead bufio.Reader) string {
 	sb := strings.Builder{}
 
 	fmt.Print("> ")
@@ -31,7 +26,7 @@ func readStmt(bufRead bufio.Reader) io.Reader {
 		fmt.Print("..")
 	}
 
-	return strings.NewReader(sb.String())
+	return sb.String()
 }
 
 func main() {
@@ -46,34 +41,8 @@ func main() {
 	bufRead := bufio.NewReader(os.Stdin)
 
 	for {
-		stmtRead := readStmt(*bufRead)
+		stmtStr := readStmt(*bufRead)
 
-		l := lexer.New(*bufio.NewReader(stmtRead))
-
-		p, err := parser.New(l)
-		if err != nil {
-			slog.Error("failed to init parser", "err", err)
-			continue
-		}
-
-		stmt, err := p.ParseStatement()
-		if err != nil {
-			slog.Error("failed to parse statement", "err", err)
-			continue
-		}
-
-		if _, ok := stmt.(*ast.EmptyStatement); ok {
-			continue
-		}
-
-		// fmt.Printf("parsed statement: %#v\n", stmt)
-		// fmt.Printf("parsed statement: %s\n", stmt)
-
-		evald, err := eval.Eval(stmt)
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-
-		fmt.Println(evald)
+		fmt.Println(eval.Eval(stmtStr))
 	}
 }
