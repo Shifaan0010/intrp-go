@@ -14,23 +14,6 @@ import (
 	"intrp-go/parser"
 )
 
-type ReaderRepl struct {
-	prevEmpty bool
-	reader    io.Reader
-}
-
-func (r ReaderRepl) Read(p []byte) (int, error) {
-	n, err := r.reader.Read(p)
-
-	for i := 0; i < n; i += 1 {
-		if p[i] == '\n' {
-			fmt.Print("..")
-		}
-	}
-
-	return n, err
-}
-
 func readStmt(bufRead bufio.Reader) io.Reader {
 	sb := strings.Builder{}
 
