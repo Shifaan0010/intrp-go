@@ -9,8 +9,11 @@
 
 # But not these files...
 !/.gitignore
+
 !/web/index.html
 !makefile
+
+!/.github/workflows/web-wasm.yml
 
 !*.go
 !go.sum
