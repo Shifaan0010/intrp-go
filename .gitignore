@@ -10,6 +10,7 @@
 # But not these files...
 !/.gitignore
 !/web/index.html
+!makefile
 
 !*.go
 !go.sum
