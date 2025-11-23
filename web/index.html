@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 </head>
 
 <body>
@@ -16,13 +17,13 @@
 
             font-family: 'Courier New', Courier, monospace;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: bold;
 
             background: none;
         }
 
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.5em;
         }
 
         #terminal {
@@ -95,7 +96,7 @@
             cursor: pointer;
         }
 
-        @media (orientation: portrait) or (width <=600px) {
+        @media (max-aspect-ratio: 3/4) or (width <= 600px) {
             #terminal {
                 border-left: 0;
                 border-right: 0;
