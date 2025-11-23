@@ -1,36 +1,250 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8"/>
-        <script src="wasm_exec.js"></script>
-        <script>
-            const go = new Go();
-            WebAssembly.instantiateStreaming(fetch("repl-lib.wasm"), go.importObject).then((result) => {
-                go.run(result.instance);
-            });
-        </script>
-    </head>
-    <body>
-        <input id="inp" type="text" />
-        <div id="out"></div>
-        <button id="eval-btn">Eval</button>
 
-        <script>
-            const inpElt = document.getElementById("inp");
-            const outElt = document.getElementById("out");
-            const evalBtn = document.getElementById("eval-btn");
+<head>
+    <meta charset="utf-8" />
+</head>
 
-            evalBtn.addEventListener("click", () => {
-                const inpStr = inpElt.value;
+<body>
+    <style>
+        * {
+            margin: 0;
+            border: 0;
+            padding: 0;
 
+            box-sizing: border-box;
+
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 600;
+
+            background: none;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        #terminal {
+            border: 2px solid black;
+
+            padding: 12px;
+
+            min-height: 8lh;
+
+            overflow: scroll;
+        }
+
+        .term-line {
+            display: flex;
+            gap: 8px;
+        }
+
+        .prompt {
+            flex-grow: 0;
+        }
+
+        .result {
+            margin: 8px 0;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .term-inp {
+            flex-grow: 1;
+            outline: none;
+            resize: none;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+
+            gap: 12px;
+
+            padding: 10px;
+
+            width: min(100%, 800px);
+            max-height: 100%;
+        }
+
+        #outer-container {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            height: 100svh;
+            box-sizing: border-box;
+        }
+
+        #actions {
+            display: flex;
+
+            gap: 12px;
+        }
+
+        button {
+            border: 2px solid black;
+            background-color: transparent;
+
+            padding: 6px 16px;
+
+            cursor: pointer;
+        }
+
+        @media (orientation: portrait) or (width <=600px) {
+            #terminal {
+                border-left: 0;
+                border-right: 0;
+
+                padding-left: 0;
+                padding-right: 0;
+
+                height: 100vh;
+            }
+
+            #container {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <div id="outer-container">
+        <div id="container">
+            <h1>interp-go</h1>
+            <div id="terminal">
+                <div class="term-line">
+                    <div id="inp-prompt" class="prompt">&gt;</div>
+                    <input type="text" id="inp" class="term-inp" placeholder="loading..." disabled />
+                </div>
+            </div>
+            <div id="actions">
+                <button id="eval-btn">Eval</button>
+                <button id="clear-btn">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const inpElt = document.getElementById("inp");
+        const inpPromptElt = document.getElementById("inp-prompt");
+
+        const termElt = document.getElementById("terminal");
+        const evalBtn = document.getElementById("eval-btn");
+        const clearBtn = document.getElementById("clear-btn");
+
+        const newTermLine = (prompt, str, classList) => {
+            const termLine = document.createElement("div");
+            termLine.classList.add("term-line");
+
+            for (let cls of classList ?? []) {
+                termLine.classList.add(cls);
+            }
+
+            const promptElt = document.createElement("div");
+            promptElt.classList.add("prompt");
+
+            const strElt = document.createElement("div");
+            strElt.classList.add("term-inp");
+
+            promptElt.textContent = prompt;
+            strElt.textContent = str;
+
+            termLine.replaceChildren(promptElt, strElt);
+
+            return termLine;
+        }
+
+        const onClear = () => {
+            termElt.replaceChildren(termElt.lastElementChild);
+
+            inpPromptElt.textContent = ">";
+            inpElt.textContent = "";
+            inpElt.focus();
+        };
+
+        let inp = "";
+
+        const onEnter = (evalNow) => {
+            const inpStr = inpElt.value;
+
+            inp += inpStr + '\n';
+
+            const empty = inpStr.length === 0;
+
+            inpElt.value = "";
+
+            termElt.insertBefore(newTermLine(inpPromptElt.textContent, inpStr), inpElt.parentNode);
+
+            if (evalNow || empty || !inp.match(/[({[]/)) {
                 evalBtn.setAttribute("disabled", "");
 
-                const outStr = goReplEval(inpStr);
+                let outStr = "";
 
-                outElt.textContent = outStr;
-                
+                let classList = ["result"];
+
+                try {
+                    outStr = goReplEval(inp);
+
+                } catch (e) {
+                    console.error(e);
+
+                    outStr = e.toString();
+                    classList.push("error")
+                }
+
                 evalBtn.removeAttribute("disabled");
-            });
-        </script>
-    </body>
+
+                termElt.insertBefore(newTermLine("", outStr, classList), inpElt.parentNode);
+
+                inpPromptElt.textContent = ">";
+
+                inp = "";
+            } else {
+                inpPromptElt.textContent = "…";
+            }
+
+            inpElt.textContent = "";
+            inpElt.focus();
+
+            termElt.scrollTop = termElt.scrollHeight;
+        }
+
+        evalBtn.addEventListener("click", () => onEnter(true));
+        clearBtn.addEventListener("click", onClear);
+
+        inpElt.addEventListener("keypress", () => {
+            if (event.key == "Enter") {
+                onEnter();
+            }
+        });
+
+        document.addEventListener("keydown", (evt) => {
+            if (evt.ctrlKey) {
+                if (evt.key === "l" || evt.key === "k") {
+                    onClear();
+                }
+            }
+        });
+
+
+        // load wasm
+        const replLib = fetch("repl-lib.wasm");
+
+        await import("./wasm_exec.js");
+
+        const go = new Go();
+        WebAssembly.instantiateStreaming(replLib, go.importObject).then((result) => {
+            go.run(result.instance);
+
+            inpElt.placeholder = "";
+            inpElt.removeAttribute("disabled");
+            inpElt.focus();
+        });
+    </script>
+</body>
+
 </html>
