@@ -60,8 +60,8 @@ func evalExpr(node ast.Expression) (object.Object, error) {
 	case *ast.InfixExpr:
 		return evalInfix(t)
 
-	// case *ast.PrefixExpr:
-	// 	return evalPrefix(t)
+	case *ast.PrefixExpr:
+		return evalPrefix(t)
 
 	default:
 		return nil, fmt.Errorf("evalExpr not implemented for node %s", node.String())
@@ -94,5 +94,23 @@ func evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 
 	default:
 		return nil, fmt.Errorf("evalInfix not implemented for op %s", expr.Op.Type)
+	}
+}
+
+func evalPrefix(expr *ast.PrefixExpr) (object.Object, error) {
+	right, rErr := evalExpr(expr.Expr)
+	if rErr != nil {
+		return nil, rErr
+	}
+
+	switch expr.Op.Type {
+	case token.MINUS:
+		return object.Neg(right)
+
+	case token.BANG:
+		return object.Not(right)
+
+	default:
+		return nil, fmt.Errorf("evalPrefix not implemented for op %s", expr.Op.Type)
 	}
 }
