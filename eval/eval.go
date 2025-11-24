@@ -83,6 +83,15 @@ func evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 	case token.PLUS:
 		return object.Add(left, right)
 
+	case token.MINUS:
+		return object.Sub(left, right)
+
+	case token.ASTERISK:
+		return object.Mult(left, right)
+
+	case token.SLASH:
+		return object.Div(left, right)
+
 	default:
 		return nil, fmt.Errorf("evalInfix not implemented for op %s", expr.Op.Type)
 	}
