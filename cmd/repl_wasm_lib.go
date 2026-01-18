@@ -8,6 +8,8 @@ import (
 
 var count int = 0
 
+var env eval.Environment
+
 func Eval(this js.Value, args []js.Value) any {
 	count += 1
 
@@ -17,7 +19,7 @@ func Eval(this js.Value, args []js.Value) any {
 		return js.ValueOf("")
 	}
 
-	return js.ValueOf(eval.Eval(args[0].String()))
+	return js.ValueOf(env.Eval(args[0].String()))
 
 	// return js.ValueOf(fmt.Sprint(count))
 }
