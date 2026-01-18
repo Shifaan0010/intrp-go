@@ -8,7 +8,7 @@ import (
 
 var count int = 0
 
-var env eval.Environment
+var env eval.Environment = eval.NewEnv()
 
 func Eval(this js.Value, args []js.Value) any {
 	count += 1

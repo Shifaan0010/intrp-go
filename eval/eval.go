@@ -44,9 +44,26 @@ func (e *Environment) EvalNode(node ast.Node) (object.Object, error) {
 	case *ast.ExprStatement:
 		return e.evalExpr(t.Expr)
 
+	case *ast.LetStatement:
+		return e.evalAssign(&t.Assign)
+
+	case *ast.AssignStatement:
+		return e.evalAssign(t)
+
 	default:
 		return nil, fmt.Errorf("EvalNode not implemented for node %s", node.String())
 	}
+}
+
+func (e *Environment) evalAssign(node *ast.AssignStatement) (object.Object, error) {
+	val, err := e.evalExpr(node.Expr)
+	if err != nil {
+		return nil, err
+	}
+
+	e.SetVal(node.Ident.Name, val)
+
+	return val, nil
 }
 
 func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
@@ -58,7 +75,7 @@ func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
 		return &object.Boolean{Val: t.Val}, nil
 
 	case *ast.Identifier:
-		return nil, nil
+		return e.GetVal(t.Name)
 
 	case *ast.InfixExpr:
 		return e.evalInfix(t)
@@ -70,6 +87,10 @@ func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
 		return nil, fmt.Errorf("evalExpr not implemented for node %s", node.String())
 	}
 }
+//
+// func (e *Environment) evalIdent(ident *ast.Identifier) (object.Object, error) {
+// 	ident.Name
+// }
 
 func (e *Environment) evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 	left, lErr := e.evalExpr(expr.Left)

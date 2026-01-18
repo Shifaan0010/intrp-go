@@ -32,7 +32,7 @@ func main() {
 		slog.Error("failed to parse program", "err:", err)
 	}
 
-	env := eval.Environment{}
+	env := eval.NewEnv()
 
 	for _, stmt := range program.Statements {
 		// j, _ := json.Marshal(stmt)

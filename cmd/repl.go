@@ -38,7 +38,7 @@ func main() {
 	// logger := slog.New(handler)
 	// slog.SetDefault(logger)
 
-	env := eval.Environment{}
+	env := eval.NewEnv()
 
 	bufRead := bufio.NewReader(os.Stdin)
 
