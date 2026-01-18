@@ -32,6 +32,8 @@ func main() {
 		slog.Error("failed to parse program", "err:", err)
 	}
 
+	env := eval.Environment{}
+
 	for _, stmt := range program.Statements {
 		// j, _ := json.Marshal(stmt)
 		// fmt.Printf("%s\n", string(j))
@@ -40,7 +42,7 @@ func main() {
 
 		fmt.Printf("stmt: %s", stmt)
 
-		evald, err := eval.EvalNode(stmt)
+		evald, err := env.EvalNode(stmt)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
