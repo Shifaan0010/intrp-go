@@ -38,11 +38,13 @@ func main() {
 	// logger := slog.New(handler)
 	// slog.SetDefault(logger)
 
+	env := eval.Environment{}
+
 	bufRead := bufio.NewReader(os.Stdin)
 
 	for {
 		stmtStr := readStmt(*bufRead)
 
-		fmt.Println(eval.Eval(stmtStr))
+		fmt.Println(env.Eval(stmtStr))
 	}
 }

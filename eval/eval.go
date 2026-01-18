@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func Eval(stmtStr string) string {
+func (e *Environment) Eval(stmtStr string) string {
 	l := lexer.New(*bufio.NewReader(strings.NewReader(stmtStr)))
 
 	p, err := parser.New(l)
@@ -31,7 +31,7 @@ func Eval(stmtStr string) string {
 	// fmt.Printf("parsed statement: %#v\n", stmt)
 	// fmt.Printf("parsed statement: %s\n", stmt)
 
-	evald, err := EvalNode(stmt)
+	evald, err := e.EvalNode(stmt)
 	if err != nil {
 		return fmt.Sprintf("error: %s", err)
 	}
@@ -39,17 +39,17 @@ func Eval(stmtStr string) string {
 	return fmt.Sprint(evald)
 }
 
-func EvalNode(node ast.Node) (object.Object, error) {
+func (e *Environment) EvalNode(node ast.Node) (object.Object, error) {
 	switch t := node.(type) {
 	case *ast.ExprStatement:
-		return evalExpr(t.Expr)
+		return e.evalExpr(t.Expr)
 
 	default:
-		return nil, nil
+		return nil, fmt.Errorf("EvalNode not implemented for node %s", node.String())
 	}
 }
 
-func evalExpr(node ast.Expression) (object.Object, error) {
+func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
 	switch t := node.(type) {
 	case *ast.IntLiteral:
 		return &object.Integer{Val: t.Val}, nil
@@ -57,24 +57,27 @@ func evalExpr(node ast.Expression) (object.Object, error) {
 	case *ast.BoolLiteral:
 		return &object.Boolean{Val: t.Val}, nil
 
+	case *ast.Identifier:
+		return nil, nil
+
 	case *ast.InfixExpr:
-		return evalInfix(t)
+		return e.evalInfix(t)
 
 	case *ast.PrefixExpr:
-		return evalPrefix(t)
+		return e.evalPrefix(t)
 
 	default:
 		return nil, fmt.Errorf("evalExpr not implemented for node %s", node.String())
 	}
 }
 
-func evalInfix(expr *ast.InfixExpr) (object.Object, error) {
-	left, lErr := evalExpr(expr.Left)
+func (e *Environment) evalInfix(expr *ast.InfixExpr) (object.Object, error) {
+	left, lErr := e.evalExpr(expr.Left)
 	if lErr != nil {
 		return nil, lErr
 	}
 
-	right, rErr := evalExpr(expr.Right)
+	right, rErr := e.evalExpr(expr.Right)
 	if rErr != nil {
 		return nil, rErr
 	}
@@ -97,8 +100,8 @@ func evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 	}
 }
 
-func evalPrefix(expr *ast.PrefixExpr) (object.Object, error) {
-	right, rErr := evalExpr(expr.Expr)
+func (e *Environment) evalPrefix(expr *ast.PrefixExpr) (object.Object, error) {
+	right, rErr := e.evalExpr(expr.Expr)
 	if rErr != nil {
 		return nil, rErr
 	}
