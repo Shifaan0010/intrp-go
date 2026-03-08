@@ -41,6 +41,9 @@ func (e *Environment) Eval(stmtStr string) string {
 
 func (e *Environment) EvalNode(node ast.Node) (object.Object, error) {
 	switch t := node.(type) {
+	case *ast.EmptyStatement:
+		return nil, nil
+
 	case *ast.ExprStatement:
 		return e.evalExpr(t.Expr)
 
@@ -61,9 +64,9 @@ func (e *Environment) evalAssign(node *ast.AssignStatement) (object.Object, erro
 		return nil, err
 	}
 
-	e.SetVal(node.Ident.Name, val)
+	err = e.SetVal(node.Ident.Name, val)
 
-	return val, nil
+	return val, err
 }
 
 func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
@@ -87,6 +90,7 @@ func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
 		return nil, fmt.Errorf("evalExpr not implemented for node %s", node.String())
 	}
 }
+
 //
 // func (e *Environment) evalIdent(ident *ast.Identifier) (object.Object, error) {
 // 	ident.Name
@@ -115,6 +119,24 @@ func (e *Environment) evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 
 	case token.SLASH:
 		return object.Div(left, right)
+
+	case token.EQ:
+		return object.Eq(left, right)
+
+	case token.NOT_EQ:
+		return object.Neq(left, right)
+
+	case token.LT:
+		return object.Lt(left, right)
+
+	case token.GT:
+		return object.Gt(left, right)
+
+	case token.LTE:
+		return object.Lte(left, right)
+
+	case token.GTE:
+		return object.Gte(left, right)
 
 	default:
 		return nil, fmt.Errorf("evalInfix not implemented for op %s", expr.Op.Type)

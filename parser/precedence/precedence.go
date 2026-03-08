@@ -10,7 +10,7 @@ const (
 	_ = iota
 	LOWEST
 	EQUALS      // ==
-	LESSGREATER // < or >
+	LESSGREATER // <=, >=, < or >
 	COMMA
 	SUM         // +
 	PRODUCT     // *
@@ -29,6 +29,10 @@ func TokenPrecedence(tok token.TokenType) Precedence {
 	case token.NOT_EQ:
 		return EQUALS
 
+	case token.LTE:
+		fallthrough
+	case token.GTE:
+		fallthrough
 	case token.LT:
 		fallthrough
 	case token.GT:

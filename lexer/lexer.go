@@ -78,8 +78,16 @@ func (l *Lexer) nextToken() (token.Token, error) {
 	case '/':
 		return token.Token{Type: token.SLASH, Literal: string(l.buf)}, nil
 	case '<':
+		if b, err := l.peekByte(); err == nil && b == '=' {
+			l.readByte(false)
+			return token.Token{Type: token.LTE, Literal: string(l.buf)}, nil
+		}
 		return token.Token{Type: token.LT, Literal: string(l.buf)}, nil
 	case '>':
+		if b, err := l.peekByte(); err == nil && b == '=' {
+			l.readByte(false)
+			return token.Token{Type: token.GTE, Literal: string(l.buf)}, nil
+		}
 		return token.Token{Type: token.GT, Literal: string(l.buf)}, nil
 	case '\n':
 		return token.Token{Type: token.NEWLINE, Literal: string(l.buf)}, nil

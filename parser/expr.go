@@ -126,6 +126,8 @@ func isInfix(tok token.TokenType) bool {
 		tok == token.SLASH ||
 		tok == token.LT ||
 		tok == token.GT ||
+		tok == token.LTE ||
+		tok == token.GTE ||
 		tok == token.LPAREN ||
 		tok == token.COMMA
 }
