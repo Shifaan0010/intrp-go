@@ -86,15 +86,16 @@ func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
 	case *ast.PrefixExpr:
 		return e.evalPrefix(t)
 
+	case *ast.BlockExpr:
+		return e.evalBlock(t)
+
+	case *ast.IfExpr:
+		return e.evalIf(t)
+
 	default:
 		return nil, fmt.Errorf("evalExpr not implemented for node %s", node.String())
 	}
 }
-
-//
-// func (e *Environment) evalIdent(ident *ast.Identifier) (object.Object, error) {
-// 	ident.Name
-// }
 
 func (e *Environment) evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 	left, lErr := e.evalExpr(expr.Left)
@@ -159,4 +160,40 @@ func (e *Environment) evalPrefix(expr *ast.PrefixExpr) (object.Object, error) {
 	default:
 		return nil, fmt.Errorf("evalPrefix not implemented for op %s", expr.Op.Type)
 	}
+}
+
+func (e *Environment) evalIf(expr *ast.IfExpr) (object.Object, error) {
+	cond, err := e.evalExpr(expr.Cond)
+	if err != nil {
+		return nil, err
+	}
+
+	boolCond, ok := cond.(*object.Boolean)
+	if !ok {
+		return nil, fmt.Errorf("evalIf: expected boolean condition, got %s", cond.Type())
+	}
+
+	if boolCond.Val {
+		return e.evalExpr(expr.If)
+	} else {
+		if expr.Else == nil {
+			return nil, nil
+		}
+
+		return e.evalExpr(*expr.Else)
+	}
+}
+
+func (e *Environment) evalBlock(expr *ast.BlockExpr) (object.Object, error) {
+	var res object.Object
+	var err error
+
+	for _, stmt := range expr.Stmts {
+		res, err = e.EvalNode(stmt)
+		if err != nil {
+			return res, err
+		}
+	}
+
+	return res, err
 }
