@@ -15,6 +15,8 @@
 
 !/.github/workflows/web-wasm.yml
 
+!/cmd/pratt.py
+
 !*.go
 !go.sum
 !go.mod
