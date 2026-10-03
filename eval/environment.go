@@ -24,6 +24,20 @@ func (e *Environment) currFrame() map[string]object.Object {
 	return e.stack[len(e.stack) - 1]
 }
 
+func (e *Environment) pushFrame(frame map[string]object.Object) {
+	e.stack = append(e.stack, frame)
+}
+
+func (e *Environment) popFrame() error {
+	if len(e.stack) == 0 {
+		fmt.Errorf("no stack frames to pop")
+	}
+
+	e.stack = e.stack[:len(e.stack)-1]
+
+	return nil
+}
+
 func (e *Environment) SetVal(name string, val object.Object) error {
 	e.currFrame()[name] = val
 

@@ -93,37 +93,37 @@ func (e *IfExpr) String() string {
 
 func (e *IfExpr) expressionNode() {}
 
-type FnExpr struct {
+type FnDeclExpr struct {
 	Params []Identifier
 	Block  BlockExpr
 	Tok    token.Token
 }
 
-func (e *FnExpr) TokenLiteral() string {
+func (e *FnDeclExpr) TokenLiteral() string {
 	return e.Tok.Literal
 }
 
-func (e *FnExpr) String() string {
+func (e *FnDeclExpr) String() string {
 	return fmt.Sprintf("fn (%s) %s", &e.Params, e.Block)
 }
 
-func (e *FnExpr) expressionNode() {}
+func (e *FnDeclExpr) expressionNode() {}
 
-type CallExpr struct {
-	Ident  Identifier
+type FnCallExpr struct {
+	FnExpr  Expression
 	Params []Expression
 	Tok    token.Token
 }
 
-func (e *CallExpr) TokenLiteral() string {
+func (e *FnCallExpr) TokenLiteral() string {
 	return e.Tok.Literal
 }
 
-func (e *CallExpr) String() string {
-	return fmt.Sprintf("%s(%s)", e.Ident, &e.Params)
+func (e *FnCallExpr) String() string {
+	return fmt.Sprintf("%s(%s)", e.FnExpr, &e.Params)
 }
 
-func (e *CallExpr) expressionNode() {}
+func (e *FnCallExpr) expressionNode() {}
 
 type BlockExpr struct {
 	Stmts []Statement

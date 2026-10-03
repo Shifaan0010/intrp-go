@@ -73,7 +73,7 @@ func (p *Parser) parsePrefix() (ast.Expression, error) {
 		leftExpr, err = p.parseIf()
 
 	case token.FUNCTION:
-		leftExpr, err = p.parseFn()
+		leftExpr, err = p.parseFnDecl()
 
 	default:
 		return nil, fmt.Errorf("no prefix fn for token %s", p.curToken.Type)
@@ -133,23 +133,27 @@ func isInfix(tok token.TokenType) bool {
 }
 
 func (p *Parser) parseInfix(left ast.Expression, prec precedence.Precedence) (ast.Expression, error) {
-	expr := &ast.InfixExpr{
-		Op:   p.curToken,
-		Left: left,
-	}
-
-	switch expr.Op.Type {
+	switch p.curToken.Type {
 	case token.LPAREN:
-		argsExpr, err := p.parseParenthesis()
-		if err != nil {
-			return expr, err
+		expr := &ast.FnCallExpr{
+			FnExpr: left,
+			Tok: p.curToken,
 		}
-		
-		expr.Right = argsExpr
+		argsExpr, err := p.parseFnArgs()
+		if err != nil {
+			return nil, err
+		}
+
+		expr.Params = argsExpr
 
 		return expr, nil
 
 	default:
+		expr := &ast.InfixExpr{
+			Op:   p.curToken,
+			Left: left,
+		}
+
 		p.nextToken()
 
 		rightExpr, err := p.parseExpr(prec)
@@ -221,12 +225,12 @@ func (p *Parser) parseIf() (ast.Expression, error) {
 	return expr, nil
 }
 
-func (p *Parser) parseFn() (ast.Expression, error) {
+func (p *Parser) parseFnDecl() (ast.Expression, error) {
 	if p.curToken.Type != token.FUNCTION {
 		panic(fmt.Sprintf("parseFn called with invalid token %s", p.curToken))
 	}
 
-	expr := &ast.FnExpr{
+	expr := &ast.FnDeclExpr{
 		Tok: p.curToken,
 	}
 
@@ -265,6 +269,39 @@ func (p *Parser) parseFn() (ast.Expression, error) {
 	expr.Block = *block
 
 	return expr, nil
+}
+
+func (p *Parser) parseFnArgs() ([]ast.Expression, error) {
+	if p.curToken.Type != token.LPAREN {
+		panic(fmt.Sprintf("parseFnArgs called with invalid token %s", p.curToken))
+	}
+
+	p.nextToken()
+
+	if p.curToken.Type == token.RPAREN {
+		p.nextToken()
+
+		return []ast.Expression{}, nil
+	}
+
+	args := []ast.Expression{}
+	for p.curToken.Type != token.RPAREN {
+		argExpr, _ := p.parseExpr(precedence.COMMA)
+
+		args = append(args, argExpr)
+
+		if p.curToken.Type == token.COMMA {
+			p.nextToken()
+		}
+	}
+
+	if p.curToken.Type != token.RPAREN {
+		return args, fmt.Errorf("parseFnArgs: expected ')', got %s", p.curToken)
+	}
+
+	p.nextToken()
+
+	return args, nil
 }
 
 func (p *Parser) parseBlock() (*ast.BlockExpr, error) {

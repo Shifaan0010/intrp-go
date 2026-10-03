@@ -7,6 +7,7 @@ const (
 	NULL
 	BOOLEAN
 	INTEGER
+	FN
 )
 
 func (t Type) String() string {
@@ -19,6 +20,8 @@ func (t Type) String() string {
 		return "BOOLEAN"
 	case INTEGER:
 		return "INTEGER"
+	case FN:
+		return "FUNCTION"
 	default:
 		return "< >"
 	}

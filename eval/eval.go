@@ -2,6 +2,7 @@ package eval
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"intrp-go/ast"
 	"intrp-go/lexer"
@@ -70,6 +71,10 @@ func (e *Environment) evalAssign(node *ast.AssignStatement) (object.Object, erro
 }
 
 func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
+	if node == nil {
+		return nil, nil
+	}
+
 	switch t := node.(type) {
 	case *ast.IntLiteral:
 		return &object.Integer{Val: t.Val}, nil
@@ -91,6 +96,12 @@ func (e *Environment) evalExpr(node ast.Expression) (object.Object, error) {
 
 	case *ast.IfExpr:
 		return e.evalIf(t)
+
+	case *ast.FnDeclExpr:
+		return e.evalFnDecl(t)
+
+	case *ast.FnCallExpr:
+		return e.evalFnCall(t)
 
 	default:
 		return nil, fmt.Errorf("evalExpr not implemented for node %s", node.String())
@@ -139,6 +150,9 @@ func (e *Environment) evalInfix(expr *ast.InfixExpr) (object.Object, error) {
 	case token.GTE:
 		return object.Gte(left, right)
 
+	// case token.LPAREN:
+	// 	return e.evalFnCall()
+
 	default:
 		return nil, fmt.Errorf("evalInfix not implemented for op %s", expr.Op.Type)
 	}
@@ -182,6 +196,44 @@ func (e *Environment) evalIf(expr *ast.IfExpr) (object.Object, error) {
 
 		return e.evalExpr(*expr.Else)
 	}
+}
+
+func (e *Environment) evalFnDecl(expr *ast.FnDeclExpr) (object.Object, error) {
+	return &object.Fn{FnDecl: expr}, nil
+}
+
+func (e *Environment) evalFnCall(expr *ast.FnCallExpr) (object.Object, error) {
+	fnVal, err := e.evalExpr(expr.FnExpr)
+	if err != nil {
+		return nil, errors.Join(fmt.Errorf("evalFnCall: error in evaluating left"), err)
+	}
+
+	fn, ok := fnVal.(*object.Fn)
+	if !ok {
+		return nil, fmt.Errorf("evalFnCall: expected function, got %s", fnVal.Type())
+	}
+
+	if len(fn.FnDecl.Params) != len(expr.Params) {
+		return nil, fmt.Errorf("evalFnCall: expected %d params, got %d (%v)", len(fn.FnDecl.Params), len(expr.Params), expr.Params)
+	}
+
+	frame := map[string]object.Object{}
+
+	for i, par := range fn.FnDecl.Params {
+		paramVal, err := e.evalExpr(expr.Params[i])
+		if err != nil {
+			return nil, errors.Join(fmt.Errorf("evalFnCall: error in evaluating param %s", expr.Params[i]), err)
+		}
+
+		frame[par.Name] = paramVal
+	}
+
+
+	e.pushFrame(frame)
+	val, err := e.evalBlock(&fn.FnDecl.Block)
+	e.popFrame()
+
+	return val, err
 }
 
 func (e *Environment) evalBlock(expr *ast.BlockExpr) (object.Object, error) {
