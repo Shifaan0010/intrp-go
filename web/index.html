@@ -57,6 +57,7 @@
             flex-grow: 1;
             outline: none;
             resize: none;
+			white-space: pre;
         }
 
         #container {
@@ -130,6 +131,14 @@
     </div>
 
     <script type="module">
+		const exampleCode = `let foo = fn(n) {
+    if (n < 1) {
+        1
+    } else {
+        n * foo(n - 1)
+    }
+}`;
+
         const inpElt = document.getElementById("inp");
         const inpPromptElt = document.getElementById("inp-prompt");
 
@@ -159,20 +168,31 @@
             return termLine;
         }
 
+		const clearInp = () => {
+			inp = "";
+
+            inpPromptElt.textContent = ">";
+            inpElt.value = "";
+            inpElt.focus();
+		}
+
         const onClear = () => {
             termElt.replaceChildren(termElt.lastElementChild);
 
-            inpPromptElt.textContent = ">";
-            inpElt.textContent = "";
-            inpElt.focus();
+			clearInp();
         };
 
+		const history = [];
+		let historyIdx = null;
         let inp = "";
 
         const onEnter = (evalNow) => {
             const inpStr = inpElt.value;
 
             inp += inpStr + '\n';
+			if (inpStr != "") {
+				history.push(inpStr);
+			}
 
             const empty = inpStr.length === 0;
 
@@ -202,7 +222,6 @@
                 termElt.insertBefore(newTermLine("", outStr, classList), inpElt.parentNode);
 
                 inpPromptElt.textContent = ">";
-
                 inp = "";
             } else {
                 inpPromptElt.textContent = "…";
@@ -214,22 +233,80 @@
             termElt.scrollTop = termElt.scrollHeight;
         }
 
+		const onKeyDown = (event) => {
+			// console.log("key", event);
+			// console.log(history, historyIdx, inp);
+
+			let stopPropagate = true;
+			let preventDefault = true;
+
+            if (event.ctrlKey) {
+                if (event.key === "l" || event.key === "k") {
+                    onClear();
+				} else if (event.key === "c" && (inp !== "" || inpElt.value !== "")) {
+            		termElt.insertBefore(newTermLine(inpPromptElt.textContent, inpElt.value), inpElt.parentNode);
+                	termElt.insertBefore(newTermLine("", "^C"), inpElt.parentNode);
+					clearInp();
+				}
+            } else if (inpElt.placeholder === exampleCode && (event.key === "Tab" || event.key === "Enter")) {
+				inpElt.placeholder = "";
+
+				if (inpElt.value === "") {
+					for (let val of exampleCode.split("\n")) {
+						inpElt.value = val;
+						onEnter();
+					}
+				}
+			} else if (event.key === "ArrowUp") {
+				if (historyIdx == null) {
+					historyIdx = history.length - 1;
+					if (inpElt.value !== "") {
+						history.push(inpElt.value);
+					}
+				} else if (historyIdx > 0) {
+					historyIdx -= 1;
+				}
+
+				inpElt.value = history[historyIdx];
+			} else if (event.key === "ArrowDown") {
+				if (historyIdx != null) {
+					if (historyIdx >= 0 && historyIdx < history.length) {
+						historyIdx += 1;
+					}
+
+					if (historyIdx >= history.length) {
+						historyIdx = null;
+						inpElt.value = "";
+					} else {
+						inpElt.value = history[historyIdx];
+					}
+				}
+			} else if (event.key === "Enter") {
+                onEnter();
+			} else if (event.key === "Tab") {
+				inpElt.value += "    ";
+			} else {
+				stopPropagate = false;
+				preventDefault = false;
+			}
+
+			if (stopPropagate) {
+				event.stopPropagation();
+			}
+
+			if (preventDefault) {
+				event.preventDefault();
+			}
+        }
+
         evalBtn.addEventListener("click", () => onEnter(true));
         clearBtn.addEventListener("click", onClear);
 
-        inpElt.addEventListener("keypress", () => {
-            if (event.key == "Enter") {
-                onEnter();
-            }
-        });
+        // inpElt.addEventListener("keydown", onKeyDown);
 
-        document.addEventListener("keydown", (evt) => {
-            if (evt.ctrlKey) {
-                if (evt.key === "l" || evt.key === "k") {
-                    onClear();
-                }
-            }
-        });
+        document.addEventListener("keydown", onKeyDown);
+
+		document.addEventListener("click", () => inpElt.focus());
 
 
         // load wasm
@@ -241,7 +318,8 @@
         WebAssembly.instantiateStreaming(replLib, go.importObject).then((result) => {
             go.run(result.instance);
 
-            inpElt.placeholder = "";
+            inpElt.placeholder = exampleCode;
+
             inpElt.removeAttribute("disabled");
             inpElt.focus();
         });
